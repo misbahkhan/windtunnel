@@ -1,0 +1,48 @@
+version: '3.1'
+
+services:
+
+  # port 5432
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+
+  # port 6379
+  redis:
+    image: redis
+    restart: always
+
+  airflow:
+      image: airflow-server
+      restart: always
+      volumes:
+          - ./workspace:/root/airflow
+      ports:
+          - 7000:7000
+      depends_on:
+          - postgres
+          - redis
+
+  loadgen:
+      image: airflow-executor
+      restart: always
+      volumes:
+          - ./workspace:/root/airflow
+      environment:
+          - WT_QUEUE=loadgen
+      depends_on:
+          - airflow
+      ports:
+          - 5555:5555
+
+  executor:
+      image: airflow-executor
+      restart: always
+      volumes:
+          - ./workspace:/root/airflow
+      depends_on:
+          - airflow
+      ports:
+          - 5556:5555
